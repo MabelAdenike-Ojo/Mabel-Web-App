@@ -3,144 +3,69 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mabel's Gemini Q&A</title>
+  <title>Question Answering AI</title>
   <style>
-    /* Reset */
-    * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
-
     body {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      font-family: Arial, sans-serif;
       padding: 20px;
-      color: #fff;
+      max-width: 600px;
+      margin: auto;
+      background-color: #f9f9f9;
     }
-
-    .container {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 40px;
-      border-radius: 25px;
-      backdrop-filter: blur(10px);
-      max-width: 700px;
-      width: 100%;
+    h1 {
       text-align: center;
     }
-
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 10px;
-    }
-
-    p.tagline {
-      margin-bottom: 30px;
-      font-size: 1.1rem;
-      color: #eee;
-    }
-
-    textarea {
+    input, button {
       width: 100%;
-      padding: 15px;
-      border-radius: 15px;
-      border: none;
-      font-size: 1rem;
-      resize: vertical;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
     }
-
-    button {
+    #answer {
       margin-top: 20px;
-      padding: 15px 50px;
-      font-size: 1.2rem;
-      border: none;
-      border-radius: 50px;
-      cursor: pointer;
-      background: #ff6b6b;
-      color: white;
-      transition: 0.3s;
-    }
-
-    button:hover {
-      background: #e91e63;
-    }
-
-    .answer {
-      background: rgba(255,255,255,0.9);
-      color: #333;
-      padding: 25px;
-      margin-top: 30px;
-      border-radius: 15px;
-      border-left: 6px solid #ff6b6b;
-      display: none; /* hide initially */
-      text-align: left;
-    }
-
-    .loading {
-      margin-top: 20px;
-      display: none;
-      font-style: italic;
-      color: #fff;
-    }
-
-    footer {
-      margin-top: 40px;
-      font-size: 0.85rem;
-      color: #ddd;
-    }
-
-    @media(max-width: 500px){
-      button { padding: 12px 30px; font-size: 1rem; }
+      padding: 10px;
+      background-color: #e1f5fe;
+      border-radius: 5px;
+      min-height: 50px;
     }
   </style>
 </head>
 <body>
+  <h1>Ask the AI a Question</h1>
 
-<div class="container">
-  <h1>Mabel's Gemini Q&A</h1>
-  <p class="tagline">Ask anything, get answers powered by Google Gemini API!</p>
-
-  <textarea id="question" rows="4" placeholder="Type your question here..."></textarea><br>
+  <input type="text" id="question" placeholder="Type your question here" />
   <button onclick="askQuestion()">Ask</button>
 
-  <p class="loading" id="loading">Loading answer...</p>
+  <div id="answer">Your answer will appear here...</div>
 
-  <div class="answer" id="answer"></div>
+  <script>
+    async function askQuestion() {
+      const questionInput = document.getElementById("question");
+      const answerDiv = document.getElementById("answer");
 
-  <footer>© Mabel • Bioinformatics Student • 2025</footer>
-</div>
+      const question = questionInput.value.trim();
+      if (!question) {
+        answerDiv.innerText = "Please enter a question!";
+        return;
+      }
 
-<script>
-  async function askQuestion() {
-    const questionBox = document.getElementById("question");
-    const answerDiv = document.getElementById("answer");
-    const loading = document.getElementById("loading");
+      answerDiv.innerText = "Thinking... 🤖";
 
-    const question = questionBox.value.trim();
-    if(!question) return;
+      try {
+        const response = await fetch("/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question })
+        });
 
-    // Show loading
-    loading.style.display = "block";
-    answerDiv.style.display = "none";
+        const data = await response.json();
+        answerDiv.innerText = data.answer || "No answer returned.";
 
-    try {
-      const response = await fetch("/ask", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ question })
-      });
-
-      const data = await response.json();
-
-      answerDiv.innerText = data.answer;
-      answerDiv.style.display = "block";
-    } catch(err) {
-      answerDiv.innerText = "Error fetching answer.";
-      answerDiv.style.display = "block";
-    } finally {
-      loading.style.display = "none";
+      } catch (err) {
+        console.error(err);
+        answerDiv.innerText = "Error contacting the AI. Please try again.";
+      }
     }
-  }
-</script>
-
+  </script>
 </body>
 </html>

@@ -1,42 +1,41 @@
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+require('dotenv').config();
+const express = require('express');
+const bodyParser = require('body-parser');
+const {GoogleGenerativeAI} = require("@google/generative-ai")
 
 const app = express();
-app.use(cors());
+const PORT = 3000;
+
 app.use(bodyParser.json());
-app.use(express.static("public"));
+app.use(express.static('public'));
 
-const genAI = new GoogleGenerativeAI("AIzaSyCSnxO0rsgK8FOvaZFS_tKd6pPayIZxBOc");
+// Initialize the Gemini client correctly
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+const model = genAI.getGenerativeModel({ model: 
+  "gemini-2.5-flash-lite" });
 
+// Test route
+app.get("/", (req, res) => {
+  res.send("Server is working ✅");
+});
+
+// Endpoint for questions
 app.post("/ask", async (req, res) => {
-  console.log("POST /ask hit");  
-  console.log("Request body:", req.body);
-
   try {
-    const userQuestion = req.body.question;
-    console.log("Question:", userQuestion);
+    const question = req.body.question;
 
-    // Use a valid, supported Gemini model
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-    console.log("Calling Gemini API...");
-    const response = await model.generateContent(userQuestion);
-
-    const answer = response.response.text();
-    console.log("Gemini response:", answer);
+    const result = await model.generateContent(question);
+    const response = await result.response;
+    const answer = response.text();
 
     res.json({ answer });
+
   } catch (error) {
-    console.error("FULL ERROR:", error);
-    res.status(500).json({ answer: "Server error. Check terminal." });
+    console.error("AI Error:", error);
+    res.json({ answer: "No response from AI." });
   }
 });
 
-const PORT = 3000;
-const HOST = '0.0.0.0';
-
-app.listen(PORT, HOST, () => {
-  console.log(`Server running on http://${HOST}:${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
